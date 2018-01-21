@@ -1,10 +1,10 @@
-
-## This code is written to answer questions regarding a personal activity monitoring device
-  ## It utilizes data obtained from the course website
+	
+  	## This code is written to answer questions regarding a personal activity monitoring device
+  	## It utilizes data obtained from the course website
   
-  ##Loading and pre-processing the data
+  	##Loading and pre-processing the data
   
-  dataset_url <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'
+  	dataset_url <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'
 	download.file(dataset_url, "Dataset.zip")
 	unzip("Dataset.zip", exdir = "Dataset")
 	setwd("C:/Users/Abdulrahman/Documents/Coursera/Reproducible Research/Activity/Dataset")
@@ -21,10 +21,10 @@
 
 	##What is mean total number of steps taken per day?
 	
-  ##To obtain this, we first generate a histogram of the daily total number of steps taken. The histogram will show the distribution of these totals.
+  	##To obtain this, we first generate a histogram of the daily total number of steps taken. The histogram will show the distribution of these totals.
 	##Following this, we then calculate and list the mean and median total number of steps per day
   
-  dailysum <- tapply(data_new$steps, data_new$date, sum, na.rm=TRUE, simplify=T)
+  	dailysum <- tapply(data_new$steps, data_new$date, sum, na.rm=TRUE, simplify=T)
 	dailysum <- dailysum[!is.na(dailysum)]
 
 	hist(x=dailysum,
@@ -33,11 +33,17 @@
      		xlab="Daily total steps",
      		ylab="Frequency",
      		main="The distribution of daily total (excluding missing data)")
+		
+	dev.copy(png, file="plot1.png", height=640, width=480)
+	dev.off()
+	
 
 	##Calculate and list the mean and median total number of steps taken per day
 	
-  mean(dailysum)
+  	mean(dailysum)
+	## [1] 10766.19
 	median(dailysum)
+	## [1] 10765
 
 	##What is the average daily activity pattern?
 	##In order to evaluate the average daily activity pattern, create a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis) 
@@ -51,29 +57,37 @@
           		type="l",
           		xlab="5-minute intervals",
           		ylab="average steps in the interval across all days"))
+	
+	dev.copy(png, file="plot2.png", height=640, width=480)
+	dev.off()
+
 
 	##Determine which 5-minute interval, contains the maximum number of steps on average across all the days in the dataset
 	
 	max_steps <- max(data_ai$avg)
 	data_ai[data_ai$avg == max_steps, ]
  
+ 	##   interval      avg
+	##835      835 206.1698
+	
 	##Input missing values
 	##First, we calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs):
 
 	sum(is.na(data$steps))
-
+	## [1] 2304
+	
 	##This means the original data set has 2304 rows with missing data.
 	##We use a simple strategy for filling in all of the missing values in the dataset. If a 5-minute interval has missing value, we use the mean for that 5-minute interval.
 	##We create a new data frame data_impute that is equal to the original dataset but with the missing data included. Here, we use the mean for that interval for computation as follows:
   
-  data_impute <- data
+  	data_impute <- data
 	ndx <- is.na(data_impute$steps)
 	int_avg <- tapply(data_new$steps, data_new$interval, mean, na.rm=TRUE, simplify=T)
 	data_impute$steps[ndx] <- int_avg[as.character(data_impute$interval[ndx])]
 
 	##We then plot a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day.
 	
-  new_dailysum <- tapply(data_impute$steps, data_impute$date, sum, na.rm=TRUE, simplify=T)
+  	new_dailysum <- tapply(data_impute$steps, data_impute$date, sum, na.rm=TRUE, simplify=T)
 
 	hist(x=new_dailysum,
      		col="red",
@@ -82,8 +96,13 @@
      		ylab="frequency",
      		main="The distribution of daily total (with missing data imputed)")
 
+	dev.copy(png, file="plot3.png", height=640, width=480)
+	dev.off()
+	
 	mean(new_dailysum)
+	## [1] 10766.19
 	median(new_dailysum)
+	## [1] 10766.19
 
 	##Based on the compiled data set, the new mean is 10766 and the new median is 10766 . Compared with the original mean of 10766 and median of 10765 , we notice that the mean does not change. The median however, has a small change. This could be due to the use of the missing values in the data for the intervals resulting in higher frequency count.
 	
@@ -102,7 +121,14 @@
 	data_impute$wk <- as.factor(wx)
 
 	head(data_impute)
-
+	##    steps       date interval      wk
+	##1 1.7169811 2012-10-01        0 weekday
+	##2 0.3396226 2012-10-01        5 weekday
+	##3 0.1320755 2012-10-01       10 weekday
+	##4 0.1509434 2012-10-01       15 weekday
+	##5 0.0754717 2012-10-01       20 weekday
+	##6 2.0943396 2012-10-01       25 weekday
+	
 	##Next, plot a time series (i.e. type = “l”) of the 5-minute interval (x-axis) and the average number of steps taken (y-axis).
 
 	wk_data <- aggregate(steps ~ wk+interval, data=data_impute, FUN=mean)
@@ -115,5 +141,7 @@
 		type="l",
 		lty=1,
 		data=wk_data)
+	dev.copy(png, file="plot4.png", height=640, width=480)
+	dev.off()
 
 
