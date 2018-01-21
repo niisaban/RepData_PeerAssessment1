@@ -1,0 +1,119 @@
+
+## This code is written to answer questions regarding a personal activity monitoring device
+  ## It utilizes data obtained from the course website
+  
+  ##Loading and pre-processing the data
+  
+  dataset_url <- 'https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'
+	download.file(dataset_url, "Dataset.zip")
+	unzip("Dataset.zip", exdir = "Dataset")
+	setwd("C:/Users/Abdulrahman/Documents/Coursera/Reproducible Research/Activity/Dataset")
+	
+	cls = c("integer", "character", "integer")
+
+	data <- read.csv("activity.csv", head = TRUE, colClasses=cls, na.strings ="NA")
+	
+	##Process/transform dataset by correcting the type of date column
+	##Also, remove rows containing missing values. Save in a new data frame
+	
+	data$date <- as.Date(data$date)
+	data_new <- subset(data, !is.na(data$steps))
+
+	##What is mean total number of steps taken per day?
+	
+  ##To obtain this, we first generate a histogram of the daily total number of steps taken. The histogram will show the distribution of these totals.
+	##Following this, we then calculate and list the mean and median total number of steps per day
+  
+  dailysum <- tapply(data_new$steps, data_new$date, sum, na.rm=TRUE, simplify=T)
+	dailysum <- dailysum[!is.na(dailysum)]
+
+	hist(x=dailysum,
+     		col="red",
+     		breaks=20,
+     		xlab="Daily total steps",
+     		ylab="Frequency",
+     		main="The distribution of daily total (excluding missing data)")
+
+	##Calculate and list the mean and median total number of steps taken per day
+	
+  mean(dailysum)
+	median(dailysum)
+
+	##What is the average daily activity pattern?
+	##In order to evaluate the average daily activity pattern, create a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis) 
+
+	int_avg <- tapply(data_new$steps, data_new$interval, mean, na.rm=TRUE, simplify=T)
+	data_ai <- data.frame(interval=as.integer(names(int_avg)), avg=int_avg)
+
+	with(data_ai,
+     		plot(interval,
+          		avg,
+          		type="l",
+          		xlab="5-minute intervals",
+          		ylab="average steps in the interval across all days"))
+
+	##Determine which 5-minute interval, contains the maximum number of steps on average across all the days in the dataset
+	
+	max_steps <- max(data_ai$avg)
+	data_ai[data_ai$avg == max_steps, ]
+ 
+	##Input missing values
+	##First, we calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs):
+
+	sum(is.na(data$steps))
+
+	##This means the original data set has 2304 rows with missing data.
+	##We use a simple strategy for filling in all of the missing values in the dataset. If a 5-minute interval has missing value, we use the mean for that 5-minute interval.
+	##We create a new data frame data_impute that is equal to the original dataset but with the missing data included. Here, we use the mean for that interval for computation as follows:
+  
+  data_impute <- data
+	ndx <- is.na(data_impute$steps)
+	int_avg <- tapply(data_new$steps, data_new$interval, mean, na.rm=TRUE, simplify=T)
+	data_impute$steps[ndx] <- int_avg[as.character(data_impute$interval[ndx])]
+
+	##We then plot a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day.
+	
+  new_dailysum <- tapply(data_impute$steps, data_impute$date, sum, na.rm=TRUE, simplify=T)
+
+	hist(x=new_dailysum,
+     		col="red",
+     		breaks=20,
+    		xlab="daily steps",
+     		ylab="frequency",
+     		main="The distribution of daily total (with missing data imputed)")
+
+	mean(new_dailysum)
+	median(new_dailysum)
+
+	##Based on the compiled data set, the new mean is 10766 and the new median is 10766 . Compared with the original mean of 10766 and median of 10765 , we notice that the mean does not change. The median however, has a small change. This could be due to the use of the missing values in the data for the intervals resulting in higher frequency count.
+	
+	##Does the activity patterns between the weekdays and weekends show any differences?
+
+	##To obtain this, we create a new factor variable “wk” in the dataset with two levels - “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+	##helper function to decide if a day is a week day or not
+
+	is_weekday <- function(d) {
+		wd <- weekdays(d)
+		ifelse (wd == "Saturday" | wd == "Sunday", "weekend", "weekday")
+}
+
+	wx <- sapply(data_impute$date, is_weekday)
+	data_impute$wk <- as.factor(wx)
+
+	head(data_impute)
+
+	##Next, plot a time series (i.e. type = “l”) of the 5-minute interval (x-axis) and the average number of steps taken (y-axis).
+
+	wk_data <- aggregate(steps ~ wk+interval, data=data_impute, FUN=mean)
+
+	library(lattice)
+	xyplot(steps ~ interval | factor(wk),
+		layout = c(1, 2),
+		xlab="Interval",
+		ylab="Number of steps",
+		type="l",
+		lty=1,
+		data=wk_data)
+
+
